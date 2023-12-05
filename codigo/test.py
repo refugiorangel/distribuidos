@@ -70,9 +70,9 @@ def analizedMessage(message):
                 sendAll(f"A2 {localIP}")
 
         case "A4":
-            if tokens[1] not in nodeAvilable:
+            if tokens[1] not in nodeAvilable.queue:
                 nodeAvilable.put(tokens[1])
-            print(nodeAvilable)
+            print(nodeAvilable.queue)
             #agregar maquina al queue
 
         case "FF":
@@ -161,8 +161,7 @@ def sendActive():
     global localIP
     global activeMachines
 
-    print(threading.active_count())
-    if(threading.active_count() == 1):
+    if(threading.active_count() == 3):
         try:
             sendMessage(masterNode, f"A4 {localIP}")
         except:
@@ -233,7 +232,6 @@ while True:
         
         case "05":
             inp = input("Master Node:")
-            print(len(inp))
             action_t = threading.Thread(target=accion, args=(inp,))
             action_t.start()
 
