@@ -227,6 +227,7 @@ while True:
 
         case "05":
             inp = input("Master Node:")
+            print(inp)
             action_t = threading.Thread(target=accion, args=inp)
             action_t.start()
 
