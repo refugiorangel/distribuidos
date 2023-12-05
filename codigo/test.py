@@ -5,6 +5,8 @@ import time
 import queue
 import pandas as pd
 import random
+import paramiko
+
 activeMachines = []
 allMachines = ["30","31","32","33","34","35"]
 port = 1234
@@ -188,15 +190,49 @@ def initialDistribution():
     global localIP  
     df = pd.read_csv("/home/adm-user1/proyecto/distribuidos/data/PRODUCTOS.csv")
     if len(activeMachines) >0:
-        df["Existencias"] = df["Existencias"] // len(activeMachines)+1
-        df["Exceso"] = df["Existencias"] % len(activeMachines)+1
+        df["Existencias"] = df["Existencias"] // (len(activeMachines)+1)
+        df["Exceso"] = df["Existencias"] % (len(activeMachines)+1)
         pf = df[["ItemID","ItemBarcode", "ItemName", "Price", "Cost", "Categoria", "Existencias"]]
 
         for i in activeMachines:
             pf.to_csv(f"/home/adm-user1/proyecto/distribuidos/data/{i}.csv", index=False)
-        pf.to_csv(f"/home/adm-user1/proyecto/distribuidos/data/{localIP}.csv")
+        pf.to_csv(f"/home/adm-user1/proyecto/distribuidos/data/{localIP}.csv", index=False)
     else:
         df.to_csv(f"/home/adm-user1/proyecto/distribuidos/data/{localIP}.csv", index=False)
+    print("DONE")
+
+def copyFile(ip, file):
+    global ipBase
+    global localIP
+    try:
+        # Establecer conexión SSH con el servidor de origen
+        ssh_origen = paramiko.SSHClient()
+        ssh_origen.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh_origen.connect(hostname=ipBase+localIP, username="adm-user1", password="contrasenia1")
+
+        # Crear cliente SCP para copiar archivos desde el servidor de origen
+        scp_origen = paramiko.SFTPClient.from_transport(ssh_origen.get_transport())
+
+        # Establecer conexión SSH con el servidor de destino
+        ssh_destino = paramiko.SSHClient()
+        ssh_destino.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh_destino.connect(hostname=ipBase+ip, username="adm-user1", password="contrasenia1")
+
+        # Crear cliente SCP para copiar archivos al servidor de destino
+        scp_destino = paramiko.SFTPClient.from_transport(ssh_destino.get_transport())
+
+        # Copiar archivos desde el origen al destino
+        scp_origen.put(f"/home/adm-user1/proyecto/distribuidos/data/{file}.csv", f"/home/adm-user1/proyecto/distribuidos/data/{file}.csv")
+
+        print(f"Archivos copiados de {localIP}:{file} a {ip}:{file}")
+
+    except Exception as e:
+        print(f"Error al copiar archivos: {e}")
+
+    finally:
+        # Cerrar conexiones SSH
+        ssh_origen.close()
+        ssh_destino.close()
 
 typeAction = {
     "00": {
@@ -228,6 +264,11 @@ typeAction = {
         "function": defineMaster,
         "def": "define nodo maestro"
     },
+
+    "06": {
+        "function": copyFile,
+        "def": "copia un archivo a otra maquina"
+    },
 }
 
 server_t = threading.Thread(target=activeServer)
@@ -253,6 +294,12 @@ while True:
         case "05":
             inp = input("Master Node:")
             action_t = threading.Thread(target=accion, args=(inp,))
+            action_t.start()
+
+        case "06":
+            inp = input("IP,FILE")
+            sp = inp.split(",")
+            action_t = threading.Thread(target=accion, args=(sp[0], sp[1]))
             action_t.start()
 
         case _:
