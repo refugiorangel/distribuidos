@@ -3,7 +3,7 @@ import socket
 import threading
 import time
 import queue
-import pandas
+import pandas as pd
 import random
 activeMachines = []
 allMachines = ["30","31","32","33","34","35"]
@@ -183,6 +183,21 @@ def defineMaster(ip):
     masterNode = ip
     print(masterNode)
 
+def initialDistribution():
+    global activeMachines  
+    global localIP  
+    df = pd.read_csv("/home/adm-user1/proyecto/distribuidos/data/PRODUCTOS.csv")
+    if len(activeMachines) >0:
+        df["Existencias"] = df["Existencias"] // len(activeMachines)+1
+        df["Exceso"] = df["Existencias"] % len(activeMachines)+1
+        pf = df[["ItemID","ItemBarcode", "ItemName", "Price", "Cost", "Categoria", "Existencias"]]
+
+        for i in activeMachines:
+            pf.to_csv(f"/home/adm-user1/proyecto/distribuidos/data/{i}.csv", index=False)
+        pf.to_csv(f"/home/adm-user1/proyecto/distribuidos/data/{localIP}.csv")
+    else:
+        df.to_csv(f"/home/adm-user1/proyecto/distribuidos/data/{localIP}.csv", index=False)
+
 typeAction = {
     "00": {
         "function": getActives,
@@ -202,6 +217,11 @@ typeAction = {
     "03": {
         "function": sendAll,
         "def": "Manda un mensaje a todos los nodos activos"
+    },
+
+    "04": {
+        "function": initialDistribution,
+        "def": "Hace la distribución inicial"
     },
 
     "05": {
