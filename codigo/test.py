@@ -210,8 +210,8 @@ typeAction = {
     },
 }
 
-# server_t = threading.Thread(target=activeServer)
-# server_t.start()
+server_t = threading.Thread(target=activeServer)
+server_t.start()
 print(f"WRITE AN ACCION FOR START")
 
 while True:
