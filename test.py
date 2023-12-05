@@ -8,7 +8,7 @@ import random
 activeMachines = []
 allMachines = ["30","31","32","33","34","35"]
 port = 1234
-localIP = socket.gethostbyname(socket.gethostname()).split["."][-1]
+localIP = socket.gethostbyname(socket.gethostname()).split(".")[-1]
 masterNode = ""
 ipBase = socket.gethostbyname(socket.gethostname())
 nodeAvilable = queue.Queue()
@@ -172,6 +172,12 @@ def sendActive():
     else:
         pass
 
+def defineMaster(ip):
+    global masterNode
+    print(masterNode)
+    masterNode = ip
+    print(masterNode)
+
 typeAction = {
     "00": {
         "function": getActives,
@@ -191,7 +197,12 @@ typeAction = {
     "03": {
         "function": sendAll,
         "def": "Manda un mensaje a todos los nodos activos"
-    }
+    },
+
+    "05": {
+        "function": defineMaster,
+        "def": "define nodo maestro"
+    },
 }
 
 server_t = threading.Thread(target=activeServer)
