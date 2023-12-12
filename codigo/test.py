@@ -200,7 +200,7 @@ def defineMaster(ip):
 def initialDistribution():
     global activeMachines  
     global localIP  
-    df = pd.read_csv("/home/adm-user1/proyecto/distribuidos/data/PRODUCTOS.csv")
+    df = pd.read_csv("/home/adm-user1/proyecto/distribuidos/data/productos.csv")
     if len(activeMachines) >0:
         df["Existencias"] = df["Existencias"] // (len(activeMachines)+1)
         df["Exceso"] = df["Existencias"] % (len(activeMachines)+1)
