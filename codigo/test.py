@@ -79,12 +79,12 @@ def analizedMessage(message,conn):
             #agregar maquina al queue
 
         case "A5":
-            path = f"/home/adm-user/proyecto/distribuidos/data/{tokens[1]}"
-            with open(path, 'wb') as file:
-                data = conn.recv(1024).decode('utf-8')
+            path = f"/home/adm-user1/proyecto/distribuidos/data/{tokens[1]}"
+            with open(path, 'w') as file:
+                data = conn.recv(1024)
                 while data:
-                    file.write(data)
-                    data = conn.recv(1024).decode('utf-8')
+                    file.write(data.decode('utf-8'))
+                    data = conn.recv(1024)
             # Cierra el socket del servidor
             print("MESSAGE RECEIVED CORRECT!!")
 
