@@ -87,7 +87,8 @@ def analizedMessage(message,server):
                     file.write(data.decode('utf-8'))
                     data = conn.recv(1024)
             # Cierra el socket del servidor
-            print("MESSAGE RECEIVED CORRECT!!")
+            print(f"{tokens[1]} RECEIVED CORRECT!!")
+            conn.close()
 
         case "FF":
             pass
