@@ -211,7 +211,9 @@ def initialDistribution():
         pf.to_csv(f"/home/adm-user1/proyecto/distribuidos/data/{localIP}.csv", index=False)
     else:
         df.to_csv(f"/home/adm-user1/proyecto/distribuidos/data/{localIP}.csv", index=False)
-    print("DONE")
+    sendFiles()
+    print("ALL FILES SENDING")
+    
 
 def copyFile(ip, file):
     global ipBase
