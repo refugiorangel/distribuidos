@@ -91,8 +91,6 @@ def analizedMessage(message,conn):
         case "FF":
             pass
 
-f = open("")
-f.read
 def activeServer():
     global ipBase
     global port
