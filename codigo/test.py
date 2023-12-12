@@ -104,7 +104,7 @@ def activeServer():
     while True:
         conn, cliente = server.accept()
         print(f"NEW CONNECTION FROM {cliente[0]}")
-        message = conn.recv(5).decode('utf-8')
+        message = conn.recv(20).decode('utf-8')
         if message != "":
             print(f"RECEIVEC {message} from {cliente[0]}")
             analizedMessage(message, server)
@@ -232,7 +232,7 @@ def copyFile(ip, file):
         # Envía el archivo al servidor
         data = f.read(1024)
         while data:
-            sendSocket.send(data)
+            sendSocket.send(data.encode('utf-8'))
             data = f.read(1024)
 
     print(f"Archivo {file} enviado con éxito")
