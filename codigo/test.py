@@ -6,6 +6,7 @@ import queue
 import pandas as pd
 import random
 import paramiko
+import os
 
 activeMachines = []
 allMachines = ["30","31","32","33","34","35"]
@@ -20,13 +21,13 @@ for i in range(len(ipBase) -1, -1, -1):
         ipBase = ipBase[:i+1]
         break
 
-def analizedMessage(message):
+def analizedMessage(message,conn):
     tokens = message.split(" ")
     global masterNode
     global activeMachines
     global localIP
     global nodeAvilable
-    	
+
     match tokens[0]:
         #agrga una maquina activa
         case "A0":
@@ -34,7 +35,7 @@ def analizedMessage(message):
             if tokens[1] not in activeMachines:
                 activeMachines.append(tokens[1])
             print(activeMachines)
-	
+
         #remueve el nodo maestro
         case "A1":
             print(masterNode)
@@ -44,7 +45,7 @@ def analizedMessage(message):
                 index = activeMachines.index(tokens[1])
                 activeMachines.remove(index)
             print(activeMachines)
-        
+
         #agrega masternode
         case "A2":
             print(masterNode)
@@ -78,25 +79,20 @@ def analizedMessage(message):
             #agregar maquina al queue
 
         case "A5":
-            recSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            recSocket.bind((ipBase + tokens[1], port))
-            recSocket.listen(1)
-            path = f"/home/adm-user/proyecto/distribuidos/data/{tokens[2]}.csv"
-            client_socket, client_address = recSocket.accept()
-
-
+            path = f"/home/adm-user/proyecto/distribuidos/data/{tokens[1]}"
             with open(path, 'wb') as file:
-                data = client_socket.recv(1024)
+                data = conn.recv(1024).decode('utf-8')
                 while data:
                     file.write(data)
-                    data = client_socket.recv(1024)
+                    data = conn.recv(1024).decode('utf-8')
             # Cierra el socket del servidor
-            recSocket.close()
             print("MESSAGE RECEIVED CORRECT!!")
 
         case "FF":
             pass
 
+f = open("")
+f.read
 def activeServer():
     global ipBase
     global port
@@ -108,10 +104,10 @@ def activeServer():
     while True:
         conn, cliente = server.accept()
         print(f"NEW CONNECTION FROM {cliente[0]}")
-        message = conn.recv(1024).decode('utf-8')
+        message = conn.recv(5).decode('utf-8')
         if message != "":
             print(f"RECEIVEC {message} from {cliente[0]}")
-            analizedMessage(message)
+            analizedMessage(message, conn)
             response = "FF"
             conn.send(response.encode('utf-8'))
         conn.close()
@@ -126,7 +122,7 @@ def sendMessage(ip, message):
         cliente.connect((ipBase + ip, port))
         cliente.send(message.encode('utf-8'))
         response = cliente.recv(1024).decode('utf-8')
-        analizedMessage(response)
+        analizedMessage(response, cliente)
         print(f"SEND {message} to {ip} SUCESS!!!")
     except:
         print(f"SEND {message} to {ip} FAILED!!!")
@@ -224,9 +220,9 @@ def copyFile(ip, file):
 
     sendSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sendSocket.connect((ipBase + ip, port))
-    message = f"A5 {localIP} {file}"
-    sendSocket.send(message.decode('utf-8'))
-    path = f"/home/adm-user1/proyecto/distribuidos/data/{file}.csv"
+    message = f"A5 {file}"
+    sendSocket.send(message.encode('utf-8'))
+    path = f"/home/adm-user1/proyecto/distribuidos/data/{file}"
     with open(path, 'rb') as f:
         # Envía el archivo al servidor
         data = f.read(1024)
@@ -236,6 +232,17 @@ def copyFile(ip, file):
 
     print(f"Archivo {file} enviado con éxito")
     sendSocket.close()
+
+def sendFiles():
+    global activeMachines
+    global ipBase
+    global localIP
+    files = os.listdir("/home/adm-user1/proyecto/distribuidos/data/")
+
+    for i in activeMachines:
+        for j in files:
+            copyFile(i, j)
+    print("ALL FILES SENDED")
 
 typeAction = {
     "00": {
