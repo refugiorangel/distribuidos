@@ -26,7 +26,7 @@ def analizedMessage(message):
     global activeMachines
     global localIP
     global nodeAvilable
-    
+    	
     match tokens[0]:
         #agrga una maquina activa
         case "A0":
@@ -34,7 +34,7 @@ def analizedMessage(message):
             if tokens[1] not in activeMachines:
                 activeMachines.append(tokens[1])
             print(activeMachines)
-
+	
         #remueve el nodo maestro
         case "A1":
             print(masterNode)
@@ -77,6 +77,23 @@ def analizedMessage(message):
             print(nodeAvilable.queue)
             #agregar maquina al queue
 
+        case "A5":
+            recSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            recSocket.bind((ipBase + tokens[1], port))
+            recSocket.listen(1)
+            path = f"/home/adm-user/proyecto/distribuidos/data/{tokens[2]}.csv"
+            client_socket, client_address = recSocket.accept()
+
+
+            with open(path, 'wb') as file:
+                data = client_socket.recv(1024)
+                while data:
+                    file.write(data)
+                    data = client_socket.recv(1024)
+            # Cierra el socket del servidor
+            recSocket.close()
+            print("MESSAGE RECEIVED CORRECT!!")
+
         case "FF":
             pass
 
@@ -88,7 +105,6 @@ def activeServer():
     server.bind((ipBase + localIP, port))
     server.listen(5)
     print(f"LISTENING ON {localIP}")
-
     while True:
         conn, cliente = server.accept()
         print(f"NEW CONNECTION FROM {cliente[0]}")
@@ -203,36 +219,23 @@ def initialDistribution():
 
 def copyFile(ip, file):
     global ipBase
+    global port
     global localIP
-    try:
-        # Establecer conexión SSH con el servidor de origen
-        ssh_origen = paramiko.SSHClient()
-        ssh_origen.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh_origen.connect(hostname=ipBase+localIP, username="adm-user1", password="contrasenia1")
 
-        # Crear cliente SCP para copiar archivos desde el servidor de origen
-        scp_origen = paramiko.SFTPClient.from_transport(ssh_origen.get_transport())
+    sendSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sendSocket.connect((ipBase + ip, port))
+    message = f"A5 {localIP} {file}"
+    sendSocket.send(message.decode('utf-8'))
+    path = f"/home/adm-user1/proyecto/distribuidos/data/{file}.csv"
+    with open(path, 'rb') as f:
+        # Envía el archivo al servidor
+        data = f.read(1024)
+        while data:
+            sendSocket.send(data)
+            data = f.read(1024)
 
-        # Establecer conexión SSH con el servidor de destino
-        ssh_destino = paramiko.SSHClient()
-        ssh_destino.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh_destino.connect(hostname=ipBase+ip, username="adm-user1", password="contrasenia1")
-
-        # Crear cliente SCP para copiar archivos al servidor de destino
-        scp_destino = paramiko.SFTPClient.from_transport(ssh_destino.get_transport())
-
-        # Copiar archivos desde el origen al destino
-        scp_origen.put(f"/home/adm-user1/proyecto/distribuidos/data/{file}.csv", f"/home/adm-user1/proyecto/distribuidos/data/{file}.csv")
-
-        print(f"Archivos copiados de {localIP}:{file} a {ip}:{file}")
-
-    except Exception as e:
-        print(f"Error al copiar archivos: {e}")
-
-    finally:
-        # Cerrar conexiones SSH
-        ssh_origen.close()
-        ssh_destino.close()
+    print(f"Archivo {file} enviado con éxito")
+    sendSocket.close()
 
 typeAction = {
     "00": {
@@ -297,7 +300,7 @@ while True:
             action_t.start()
 
         case "06":
-            inp = input("IP,FILE")
+            inp = input("IP,FILE:")
             sp = inp.split(",")
             action_t = threading.Thread(target=accion, args=(sp[0], sp[1]))
             action_t.start()
