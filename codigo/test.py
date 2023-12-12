@@ -21,7 +21,7 @@ for i in range(len(ipBase) -1, -1, -1):
         ipBase = ipBase[:i+1]
         break
 
-def analizedMessage(message,conn):
+def analizedMessage(message,server):
     tokens = message.split(" ")
     global masterNode
     global activeMachines
@@ -80,6 +80,7 @@ def analizedMessage(message,conn):
 
         case "A5":
             path = f"/home/adm-user1/proyecto/distribuidos/data/{tokens[1]}"
+            conn,cliente = server.accept()
             with open(path, 'w') as file:
                 data = conn.recv(1024)
                 while data:
@@ -105,7 +106,7 @@ def activeServer():
         message = conn.recv(5).decode('utf-8')
         if message != "":
             print(f"RECEIVEC {message} from {cliente[0]}")
-            analizedMessage(message, conn)
+            analizedMessage(message, server)
             response = "FF"
             conn.send(response.encode('utf-8'))
         conn.close()
@@ -119,7 +120,7 @@ def sendMessage(ip, message):
         cliente = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         cliente.connect((ipBase + ip, port))
         cliente.send(message.encode('utf-8'))
-        response = cliente.recv(1024).decode('utf-8')
+        response = cliente.recv(20).decode('utf-8')
         analizedMessage(response, cliente)
         print(f"SEND {message} to {ip} SUCESS!!!")
     except:
@@ -216,12 +217,15 @@ def copyFile(ip, file):
     global port
     global localIP
 
+    send = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    send.connect((ipBase + ip, port))
+    message = f"A5 {file}"
+    send.send(message.encode('utf-8'))
+    send.close()
     sendSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sendSocket.connect((ipBase + ip, port))
-    message = f"A5 {file}"
-    sendSocket.send(message.encode('utf-8'))
     path = f"/home/adm-user1/proyecto/distribuidos/data/{file}"
-    with open(path, 'rb') as f:
+    with open(path, 'r') as f:
         # Envía el archivo al servidor
         data = f.read(1024)
         while data:
