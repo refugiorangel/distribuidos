@@ -23,13 +23,6 @@ for i in range(len(ipBase) -1, -1, -1):
         ipBase = ipBase[:i+1]
         break
 
-class TimeoutError(Exception):
-    pass
-
-def handle_timeout(signum, frame):
-    import errno
-    raise TimeoutError(os.strerror(errno.ETIME))
-
 def analizedMessage(message,server):
     tokens = message.split(" ")
     global masterNode
@@ -212,7 +205,8 @@ def getActives():
     global ipBase
     global port
     global activeMachines
-
+    
+    activeMachines = []
     print(f"GETTING ALL ACTIVE MACHINES")
     for i in allMachines:
         if i == localIP:
@@ -260,11 +254,12 @@ def sendActive():
 
     if(threading.active_count() == 3):
         if masterNode != localIP:
-            try:
-                sendMessage(masterNode, f"A4 {localIP}")
-            except:
-                activeMachines.remove(i)
-                sendAll([f"A1 {masterNode}"])
+            result = sendMessage(masterNode, f"A4 {localIP}")
+            if result == False:
+                print("Master Node Failed")
+                activeMachines.remove(masterNode)
+                sendAll(f"A1 {masterNode}")
+                masterNode = ""
                 activeMachines.sort()
                 if((len(activeMachines) -1) == activeMachines.index(localIP)):
                     next = activeMachines[0]
@@ -295,8 +290,8 @@ def initialDistribution():
     else:
         df.to_csv(f"/home/adm-user1/proyecto/distribuidos/productos/{localIP}.csv", index=False)
     defineMaster(localIP)
-    sendAll([f"A2 {localIP}"])
     sendFiles()
+    sendAll(["A2", localIP])
     print("ALL FILES SENDING")
     
 
