@@ -196,11 +196,9 @@ def sendMessage(ip, message):
     global port
     global activeMachines
     print(f"SENDING {message} to {ip}")
-    TIMEOUT=5
-    signal.signal(signal.SIGALRM, handle_timeout)
-    signal.alarm(TIMEOUT)
     try:
         cliente = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        cliente.settimeout(5)
         cliente.connect((ipBase + ip, port))
         cliente.send(message.encode('utf-8'))
         if ip not in activeMachines:
@@ -210,13 +208,10 @@ def sendMessage(ip, message):
         analizedMessage(response, cliente)
         print(f"SEND {message} to {ip} SUCESS!!!")
         return True
-    except TimeoutError:
+    except :
         cliente.close()
         print(f"SEND {message} to {ip} FAILED!!!")
         return False
-    finally:
-        cliente.close()
-        signal.alarm(0)
 
 def getActives():
     global allMachines
