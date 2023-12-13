@@ -320,7 +320,6 @@ def initialDistribution():
     sendFiles()
     sendAll(f"A2 {localIP}")
     print("ALL FILES SENDING")
-    
 
 def copyFile(ip, file):
     global ipBase
@@ -358,7 +357,7 @@ def sendFiles():
 
 def sell(ip, itemid, cantidad, cliente):
     message = f"A6 {ip} {itemid} {cantidad} {cliente}"
-    sendAll([message])
+    sendAll(message)
     path = f"/home/adm-user1/proyecto/distribuidos/productos/{ip}.csv"
     general = f"/home/adm-user1/proyecto/distribuidos/productos/productos.csv"
     try:
