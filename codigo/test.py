@@ -42,8 +42,8 @@ def analizedMessage(message,server):
             print(activeMachines)
             if tokens[1] == masterNode:
                 masterNode = ""
-                index = activeMachines.index(tokens[1])
-                activeMachines.remove(index)
+            index = activeMachines.index(tokens[1])
+            activeMachines.remove(index)
             print(activeMachines)
 
         #agrega masternode
@@ -79,7 +79,7 @@ def analizedMessage(message,server):
             #agregar maquina al queue
 
         case "A5":
-            path = f"/home/adm-user1/proyecto/distribuidos/data/{tokens[1]}"
+            path = f"/home/adm-user1/proyecto/distribuidos/productos/{tokens[1]}"
             conn,cliente = server.accept()
             with open(path, 'w') as file:
                 data = conn.recv(1024)
@@ -89,6 +89,30 @@ def analizedMessage(message,server):
             # Cierra el socket del servidor
             print(f"{tokens[1]} RECEIVED CORRECT!!")
             conn.close()
+
+        case "A6":
+            path = f"/home/adm-user1/proyecto/distribuidos/productos/{tokens[1]}.csv"
+            general = f"/home/adm-user1/proyecto/distribuidos/productos/productos.csv"
+            try:
+               
+                df = pd.read_csv(path)
+                item_id_a_modificar = int(tokens[2])
+                indice_fila = df.index[df['ItemID'] == item_id_a_modificar].tolist()[0]
+                linea = df[df['ItemID'] == item_id_a_modificar]
+                df.at[indice_fila, 'Existencias'] = df.at[indice_fila, 'Existencias'] - int(tokens[3])
+                df.to_csv(path, index=False)
+
+                df = pd.read_csv(general)
+                item_id_a_modificar = int(tokens[2])
+                indice_fila = df.index[df['ItemID'] == item_id_a_modificar].tolist()[0]
+                df.at[indice_fila, 'Existencias'] = df.at[indice_fila, 'Existencias'] - int(tokens[3])
+                df.to_csv(general, index=False)
+                total_costo = float(tokens[3]) * float(linea['Price'])
+                f = open("/home/adm-user1/proyecto/distribuidos/movimientos/movimientos.csv", "a")
+                f.write(f"{tokens[2]},{tokens[1]},{tokens[4]},{tokens[3]},{total_costo}\n")
+                print(f"{tokens[2]},{tokens[1]},{tokens[4]},{tokens[3]},{total_costo}")
+            except:
+                pass
 
         case "FF":
             pass
@@ -200,17 +224,17 @@ def defineMaster(ip):
 def initialDistribution():
     global activeMachines  
     global localIP  
-    df = pd.read_csv("/home/adm-user1/proyecto/distribuidos/data/productos.csv")
+    df = pd.read_csv("/home/adm-user1/proyecto/distribuidos/productos/productos.csv")
     if len(activeMachines) >0:
         df["Existencias"] = df["Existencias"] // (len(activeMachines)+1)
         df["Exceso"] = df["Existencias"] % (len(activeMachines)+1)
         pf = df[["ItemID","ItemBarcode", "ItemName", "Price", "Cost", "Categoria", "Existencias"]]
 
         for i in activeMachines:
-            pf.to_csv(f"/home/adm-user1/proyecto/distribuidos/data/{i}.csv", index=False)
-        pf.to_csv(f"/home/adm-user1/proyecto/distribuidos/data/{localIP}.csv", index=False)
+            pf.to_csv(f"/home/adm-user1/proyecto/distribuidos/productos/{i}.csv", index=False)
+        pf.to_csv(f"/home/adm-user1/proyecto/distribuidos/productos/{localIP}.csv", index=False)
     else:
-        df.to_csv(f"/home/adm-user1/proyecto/distribuidos/data/{localIP}.csv", index=False)
+        df.to_csv(f"/home/adm-user1/proyecto/distribuidos/productos/{localIP}.csv", index=False)
     sendFiles()
     print("ALL FILES SENDING")
     
@@ -227,7 +251,7 @@ def copyFile(ip, file):
     send.close()
     sendSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sendSocket.connect((ipBase + ip, port))
-    path = f"/home/adm-user1/proyecto/distribuidos/data/{file}"
+    path = f"/home/adm-user1/proyecto/distribuidos/productos/{file}"
     with open(path, 'r') as f:
         # Envía el archivo al servidor
         data = f.read(1024)
@@ -242,7 +266,7 @@ def sendFiles():
     global activeMachines
     global ipBase
     global localIP
-    files = os.listdir("/home/adm-user1/proyecto/distribuidos/data/")
+    files = os.listdir("/home/adm-user1/proyecto/distribuidos/productos/")
 
     for i in activeMachines:
         for j in files:
