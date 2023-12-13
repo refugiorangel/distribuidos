@@ -59,14 +59,25 @@ def analizedMessage(message,server):
 
         case "A3":
             if localIP > tokens[1]:
-                activeMachines.sort()
-                if((len(activeMachines) -1) == activeMachines.index(localIP)):
-                    next = activeMachines[0]
+                if len(activeMachines)==11:
+                    sendAll(f"A2 {localIP}")
+                    defineMaster(localIP)
+                    return
                 else:
-                    next = activeMachines[activeMachines.index(localIP) + 1]
-                sendMessage(next, f"A3 {localIP}")
+                    activeMachines.append(localIP)
+                    activeMachines.sort()
+                    index = activeMachines.index(localIP)
+                    if index == len(activeMachines) -1:
+                        sendAll(f"A2 {localIP}")
+                        defineMaster(localIP)
+                        return
+                    else:
+                        next = activeMachines(index +1)
+                        sendMessage(next, f"A3 {localIP}")
             else:
-                sendAll([f"A2 {localIP}"])
+                sendAll(f"A2 {localIP}")
+                defineMaster(localIP)
+                return
 
         case "A4":
             if tokens[1] not in nodeAvilable.queue:
@@ -260,7 +271,7 @@ def sendActive():
                 activeMachines.remove(masterNode)
                 sendAll(f"A1 {masterNode}")
                 masterNode = ""
-                if(len(activeMachines > 1)):
+                if(len(activeMachines) > 1):
                     activeMachines.append(localIP)
                     activeMachines.sort()
                     index = activeMachines.index(localIP)
