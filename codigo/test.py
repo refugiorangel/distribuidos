@@ -73,7 +73,7 @@ def analizedMessage(message,server):
                     next = activeMachines[activeMachines.index(localIP) + 1]
                 sendMessage(next, f"A3 {localIP}")
             else:
-                sendAll(f"A2 {localIP}")
+                sendAll([f"A2 {localIP}"])
 
         case "A4":
             if tokens[1] not in nodeAvilable.queue:
@@ -228,7 +228,7 @@ def getActives():
                 print(f"{i} FAILED CONNECTION")
     print(activeMachines)
 
-def sendAll(message):
+def sendAll(*message):
     global activeMachines
     global ipBase
     global masterNode
@@ -250,7 +250,7 @@ def sendAll(message):
                 if i == masterNode:
                     masterNode = ""
                 activeMachines.remove(i)
-                sendAll(f"A1 {i}")
+                sendAll([f"A1 {i}"])
                 print(f"{i} REMOVED ACTIVE DIRECTORY")          
 
 def sendActive():
@@ -264,7 +264,7 @@ def sendActive():
                 sendMessage(masterNode, f"A4 {localIP}")
             except:
                 activeMachines.remove(i)
-                sendAll(f"A1 {masterNode}")
+                sendAll([f"A1 {masterNode}"])
                 activeMachines.sort()
                 if((len(activeMachines) -1) == activeMachines.index(localIP)):
                     next = activeMachines[0]
@@ -294,7 +294,8 @@ def initialDistribution():
         pf.to_csv(f"/home/adm-user1/proyecto/distribuidos/productos/{localIP}.csv", index=False)
     else:
         df.to_csv(f"/home/adm-user1/proyecto/distribuidos/productos/{localIP}.csv", index=False)
-    sendAll(f"A2 {localIP}")
+    defineMaster(localIP)
+    sendAll([f"A2 {localIP}"])
     sendFiles()
     print("ALL FILES SENDING")
     
@@ -335,7 +336,7 @@ def sendFiles():
 
 def sell(ip, itemid, cantidad, cliente):
     message = f"A6 {ip} {itemid} {cantidad} {cliente}"
-    sendAll(message)
+    sendAll([message])
     path = f"/home/adm-user1/proyecto/distribuidos/productos/{ip}.csv"
     general = f"/home/adm-user1/proyecto/distribuidos/productos/productos.csv"
     try:
@@ -393,7 +394,7 @@ def addClient(ClienteID,Nombre,Apellido,Email,Telefono):
     global localIP
     general = f"/home/adm-user1/proyecto/distribuidos/cleitnes/clientes.csv" 
     message = f"A8 {ClienteID} {Nombre} {Apellido} {Email} {Telefono}"
-    sendAll(message)
+    sendAll([message])
     try:
         f = open(general, "a")
         f.write(f"{ClienteID},{Nombre},{Apellido},{Email},{Telefono}\n")
