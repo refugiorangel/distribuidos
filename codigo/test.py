@@ -6,7 +6,7 @@ import queue
 import pandas as pd
 import random
 import paramiko
-import os
+import os, signal
 import warnings
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -22,6 +22,13 @@ for i in range(len(ipBase) -1, -1, -1):
     if ipBase[i] == ".":
         ipBase = ipBase[:i+1]
         break
+
+class TimeoutError(Exception):
+    pass
+
+def handle_timeout(signum, frame):
+    import errno
+    raise TimeoutError(os.strerror(errno.ETIME))
 
 def analizedMessage(message,server):
     tokens = message.split(" ")
@@ -189,6 +196,9 @@ def sendMessage(ip, message):
     global port
     global activeMachines
     print(f"SENDING {message} to {ip}")
+    TIMEOUT=5
+    signal.signal(signal.SIGALRM, handle_timeout)
+    signal.alarm(TIMEOUT)
     try:
         cliente = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         cliente.connect((ipBase + ip, port))
@@ -200,9 +210,13 @@ def sendMessage(ip, message):
         analizedMessage(response, cliente)
         print(f"SEND {message} to {ip} SUCESS!!!")
         return True
-    except:
+    except TimeoutError:
+        cliente.close()
         print(f"SEND {message} to {ip} FAILED!!!")
         return False
+    finally:
+        cliente.close()
+        signal.alarm(0)
 
 def getActives():
     global allMachines
@@ -225,9 +239,10 @@ def getActives():
                 print(f"{i} FAILED CONNECTION")
     print(activeMachines)
 
-def sendAll(*message):
+def sendAll(message):
     global activeMachines
     global ipBase
+    global masterNode
     inicial = activeMachines
 
     if(len(message) == 1):
@@ -242,13 +257,13 @@ def sendAll(*message):
                 print(f"{i} REMOVED ACTIVE DIRECTORY")
     else:
         for i in inicial:
-            result =  sendMessage(i, message[1] + " "+message[0])
+            result =  sendMessage(i, message[0] + " "+message[1])
             if result == False:
                 index = activeMachines.index(i)
                 if i == masterNode:
                     masterNode = ""
                 activeMachines.remove(index)
-                sendAll(["A1",i])
+                sendAll(f"A1 {i}")
                 print(f"{i} REMOVED ACTIVE DIRECTORY")          
 
 def sendActive():
@@ -485,73 +500,76 @@ print(f"WRITE AN ACCION FOR START")
 
 while True:
     t = input()
-    accion = typeAction[t]["function"]
+    try:
+        accion = typeAction[t]["function"]
 
-    match t:
-        case "02":
-            inp = input("IP,MESSAGE:")
-            sp = inp.split(",")
-            action_t = threading.Thread(target=accion, args=(sp[0], sp[1]))
-            action_t.start()
+        match t:
+            case "02":
+                inp = input("IP,MESSAGE:")
+                sp = inp.split(",")
+                action_t = threading.Thread(target=accion, args=(sp[0], sp[1]))
+                action_t.start()
 
-        case "03":
-            inp = input("MESSAGE:")
-            action_t = threading.Thread(target=accion, args=[inp])
-            action_t.start()
+            case "03":
+                inp = input("MESSAGE:")
+                action_t = threading.Thread(target=accion, args=[inp])
+                action_t.start()
+            
+            case "05":
+                inp = input("Master Node:")
+                action_t = threading.Thread(target=accion, args=(inp,))
+                action_t.start()
+
+            case "06":
+                inp = input("IP,FILE:")
+                sp = inp.split(",")
+                action_t = threading.Thread(target=accion, args=(sp[0], sp[1]))
+                action_t.start()
+            
+            case "07":
+                inp = input("Maquina,Producto,Cantidad,Cliente:")
+                sp = inp.split(",")
+                action_t = threading.Thread(target=accion, args=(sp[0], sp[1], sp[2], sp[3]))
+                action_t.start()
+
+            case "08":
+                inp = input("ItemID,ItemBarcode,ItemName,Price,Cost,Categoria,Existencias:")
+                sp = inp.split(",")
+                action_t = threading.Thread(target=accion, args=(sp[0], sp[1], sp[2], sp[3], sp[4], sp[5], sp[6]))
+                action_t.start()
+            #agregar inventario general
+
+            case "09":
+                inp = input("ClienteID,Nombre,Apellido,Email,Telefono:")
+                sp = inp.split(",")
+                action_t = threading.Thread(target=accion, args=(sp[0], sp[1], sp[2], sp[3], sp[4]))
+                action_t.start()
+            #agregar cliente
+
+            case "0A":
+                print(masterNode)
+
+            case "0B":
+                print(activeMachines)
+
+            case "0C":
+                path = "/home/adm-user1/proyecto/distribuidos/cleitnes/clientes.csv"
+                df = pd.read_csv(path)
+                print(df)
+
+            case "0D":
+                path = "/home/adm-user1/proyecto/distribuidos/productos/productos.csv"
+                df = pd.read_csv(path)
+                print(df)
         
-        case "05":
-            inp = input("Master Node:")
-            action_t = threading.Thread(target=accion, args=(inp,))
-            action_t.start()
+            case "0E":
+                inp = input("Sucursal:")
+                path = f"/home/adm-user1/proyecto/distribuidos/productos/{inp}.csv"
+                df = pd.read_csv(path)
+                print(df)
 
-        case "06":
-            inp = input("IP,FILE:")
-            sp = inp.split(",")
-            action_t = threading.Thread(target=accion, args=(sp[0], sp[1]))
-            action_t.start()
-        
-        case "07":
-            inp = input("Maquina,Producto,Cantidad,Cliente:")
-            sp = inp.split(",")
-            action_t = threading.Thread(target=accion, args=(sp[0], sp[1], sp[2], sp[3]))
-            action_t.start()
-
-        case "08":
-            inp = input("ItemID,ItemBarcode,ItemName,Price,Cost,Categoria,Existencias:")
-            sp = inp.split(",")
-            action_t = threading.Thread(target=accion, args=(sp[0], sp[1], sp[2], sp[3], sp[4], sp[5], sp[6]))
-            action_t.start()
-        #agregar inventario general
-
-        case "09":
-            inp = input("ClienteID,Nombre,Apellido,Email,Telefono:")
-            sp = inp.split(",")
-            action_t = threading.Thread(target=accion, args=(sp[0], sp[1], sp[2], sp[3], sp[4]))
-            action_t.start()
-        #agregar cliente
-
-        case "0A":
-            print(masterNode)
-
-        case "0B":
-            print(activeMachines)
-
-        case "0C":
-            path = "/home/adm-user1/proyecto/distribuidos/cleitnes/clientes.csv"
-            df = pd.read_csv(path)
-            print(df)
-
-        case "0D":
-            path = "/home/adm-user1/proyecto/distribuidos/productos/productos.csv"
-            df = pd.read_csv(path)
-            print(df)
-    
-        case "0E":
-            inp = input("Sucursal:")
-            path = f"/home/adm-user1/proyecto/distribuidos/productos/{inp}.csv"
-            df = pd.read_csv(path)
-            print(df)
-
-        case _:
-            action_t = threading.Thread(target=accion)
-            action_t.start()
+            case _:
+                action_t = threading.Thread(target=accion)
+                action_t.start()
+    except:
+        print("INCCORRECT ACTION")
