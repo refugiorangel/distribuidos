@@ -139,14 +139,14 @@ def analizedMessage(message,server):
             try:
                 cantidad = int(tokens[7]) // (len(activeMachines) +1)
                 f = open(general, "a")
-                f.write(f"{tokens[1]},{tokens[2]},{tokens[3]},{tokens[4]},{tokens[5]},{tokens[6]},{tokens[7]}\n")
+                f.write(f"{tokens[1]},{tokens[2]},{tokens[3]} {tokens[4]},{tokens[5]},{tokens[6]},{tokens[7]},{tokens[8]}\n")
                 f.close()
                 f = open(path + localIP + ".csv", "a")
-                f.write(f"{tokens[1]},{tokens[2]},{tokens[3]},{tokens[4]},{tokens[5]},{tokens[6]},{cantidad}\n")
+                f.write(f"{tokens[1]},{tokens[2]},{tokens[3]} {tokens[4]},{tokens[5]},{tokens[6]},{tokens[7]},{cantidad}\n")
                 f.close()
                 for i in activeMachines:
                     f = open(path+i+".csv" ,"a")
-                    f.write(f"{tokens[1]},{tokens[2]},{tokens[3]},{tokens[4]},{tokens[5]},{tokens[6]},{cantidad}\n")
+                    f.write(f"{tokens[1]},{tokens[2]},{tokens[3]} {tokens[4]},{tokens[5]},{tokens[6]},{tokens[7]},{cantidad}\n")
                 print("LOAD PRODUCT SUCCESS")
             except:
                 print("LOAD PRODUCT FAILED")
@@ -416,7 +416,7 @@ def addClient(ClienteID,Nombre,Apellido,Email,Telefono):
     global localIP
     general = f"/home/adm-user1/proyecto/distribuidos/cleitnes/clientes.csv" 
     message = f"A8 {ClienteID} {Nombre} {Apellido} {Email} {Telefono}"
-    sendAll([message])
+    sendAll(message)
     try:
         f = open(general, "a")
         f.write(f"{ClienteID},{Nombre},{Apellido},{Email},{Telefono}\n")
@@ -424,6 +424,11 @@ def addClient(ClienteID,Nombre,Apellido,Email,Telefono):
         print("LOAD CLIENT SUCCESS")
     except:
         print("LOAD CLIENT FAILED")
+
+def seeClients():
+    path = "/home/adm-user1/proyecto/distribuidos/cleitnes/clientes.csv"
+    df = pd.read_csv(path)
+    print(df)
 
 typeAction = {
     "00": {
@@ -487,7 +492,7 @@ typeAction = {
     },
 
     "0C": {
-        "function": None,
+        "function": seeClients,
         "def": "agrega un cliente"
     },
 
@@ -560,11 +565,6 @@ while True:
 
             case "0B":
                 print(activeMachines)
-
-            case "0C":
-                path = "/home/adm-user1/proyecto/distribuidos/cleitnes/clientes.csv"
-                df = pd.read_csv(path)
-                print(df)
 
             case "0D":
                 path = "/home/adm-user1/proyecto/distribuidos/productos/productos.csv"
