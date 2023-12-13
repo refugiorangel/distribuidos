@@ -51,22 +51,16 @@ def analizedMessage(message,server):
             print(activeMachines)
             if tokens[1] == masterNode:
                 masterNode = ""
-            index = activeMachines.index(tokens[1])
-            activeMachines.remove(index)
+            activeMachines.remove(tokens[1])
             print(activeMachines)
 
         #agrega masternode
         case "A2":
             print(masterNode)
             print(activeMachines)
-            if masterNode != "":
-                try:
-                    index= activeMachines.index(masterNode)
-                    activeMachines.remove(index)
-                except:
-                    pass
             masterNode = tokens[1]
-            activeMachines.append(masterNode)
+            if tokens[1] not in activeMachines:
+                activeMachines.append(masterNode)
             print(masterNode)
             print(activeMachines)
 
@@ -244,20 +238,18 @@ def sendAll(message):
         for i in inicial:
             result = sendMessage(i, message[0])
             if result == False:
-                index = activeMachines.index(i)
                 if i == masterNode:
                     masterNode = ""
-                activeMachines.remove(index)
+                activeMachines.remove(i)
                 sendAll(["A1",i])
                 print(f"{i} REMOVED ACTIVE DIRECTORY")
     else:
         for i in inicial:
             result =  sendMessage(i, message[0] + " "+message[1])
             if result == False:
-                index = activeMachines.index(i)
                 if i == masterNode:
                     masterNode = ""
-                activeMachines.remove(index)
+                activeMachines.remove(i)
                 sendAll(f"A1 {i}")
                 print(f"{i} REMOVED ACTIVE DIRECTORY")          
 
@@ -271,8 +263,7 @@ def sendActive():
             try:
                 sendMessage(masterNode, f"A4 {localIP}")
             except:
-                index = activeMachines.index(i)
-                activeMachines.remove(index)
+                activeMachines.remove(i)
                 sendAll(f"A1 {masterNode}")
                 activeMachines.sort()
                 if((len(activeMachines) -1) == activeMachines.index(localIP)):
