@@ -134,10 +134,10 @@ def analizedMessage(message,server):
                 print("ORDER SELL FAILED!!!")
 
         case "A7":
-            path = f"/home/adm-user1/proyecto/distribuidos/productos/"
+            path =    f"/home/adm-user1/proyecto/distribuidos/productos/"
             general = f"/home/adm-user1/proyecto/distribuidos/productos/productos.csv" 
             try:
-                cantidad = int(tokens[7]) // (len(activeMachines) +1)
+                cantidad = int(tokens[8]) // (len(activeMachines) +1)
                 f = open(general, "a")
                 f.write(f"{tokens[1]},{tokens[2]},{tokens[3]} {tokens[4]},{tokens[5]},{tokens[6]},{tokens[7]},{tokens[8]}\n")
                 f.close()
