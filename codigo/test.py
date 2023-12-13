@@ -173,7 +173,7 @@ def activeServer():
         print(f"NEW CONNECTION FROM {cliente[0]}")
         tokens = cliente[0].split(".")
         if tokens[-1] not in activeMachines:
-            activeMachines.add(cliente[0])
+            activeMachines.append(tokens[-1])
             print(f"{tokens[-1]} ADD TO ACTIVEMACHINES")
         message = conn.recv(1024).decode('utf-8')
         if message != "":
@@ -194,13 +194,15 @@ def sendMessage(ip, message):
         cliente.connect((ipBase + ip, port))
         cliente.send(message.encode('utf-8'))
         if ip not in activeMachines:
-            activeMachines.add(ip)
+            activeMachines.append(ip)
             print(f"{ip} ADD ACTIVE DIRECTORY")
         response = cliente.recv(1024).decode('utf-8')
         analizedMessage(response, cliente)
         print(f"SEND {message} to {ip} SUCESS!!!")
+        return True
     except:
         print(f"SEND {message} to {ip} FAILED!!!")
+        return False
 
 def getActives():
     global allMachines
@@ -230,20 +232,24 @@ def sendAll(*message):
 
     if(len(message) == 1):
         for i in inicial:
-            try:
-                sendMessage(i, message[0])
-            except:
+            result = sendMessage(i, message[0])
+            if result == False:
                 index = activeMachines.index(i)
+                if i == masterNode:
+                    masterNode = ""
                 activeMachines.remove(index)
-                sendAll(f"A1 {i}")
+                sendAll(["A1",i])
+                print(f"{i} REMOVED ACTIVE DIRECTORY")
     else:
         for i in inicial:
-            try:
-                sendMessage(i, message[1] + " "+message[0])
-            except:
+            result =  sendMessage(i, message[1] + " "+message[0])
+            if result == False:
                 index = activeMachines.index(i)
+                if i == masterNode:
+                    masterNode = ""
                 activeMachines.remove(index)
-                sendAll(f"A1 {i}")
+                sendAll(["A1",i])
+                print(f"{i} REMOVED ACTIVE DIRECTORY")          
 
 def sendActive():
     global masterNode
@@ -490,7 +496,7 @@ while True:
 
         case "03":
             inp = input("MESSAGE:")
-            action_t = threading.Thread(target=accion, args=inp)
+            action_t = threading.Thread(target=accion, args=[inp])
             action_t.start()
         
         case "05":
