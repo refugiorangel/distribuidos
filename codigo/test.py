@@ -94,23 +94,32 @@ def analizedMessage(message,server):
             path = f"/home/adm-user1/proyecto/distribuidos/productos/{tokens[1]}.csv"
             general = f"/home/adm-user1/proyecto/distribuidos/productos/productos.csv"
             try:
-               
+                cantidad = int(tokens[3])
                 df = pd.read_csv(path)
                 item_id_a_modificar = int(tokens[2])
                 indice_fila = df.index[df['ItemID'] == item_id_a_modificar].tolist()[0]
                 linea = df[df['ItemID'] == item_id_a_modificar]
-                df.at[indice_fila, 'Existencias'] = df.at[indice_fila, 'Existencias'] - int(tokens[3])
+                if df.at[indice_fila, 'Existencias'] >=cantidad:
+                    df.at[indice_fila, 'Existencias'] = df.at[indice_fila, 'Existencias'] - cantidad
+                else:
+                    cantidad = df.at[indice_fila, 'Existencias']
+                    df.at[indice_fila, 'Existencias'] = df.at[indice_fila, 'Existencias'] - cantidad
                 df.to_csv(path, index=False)
 
                 df = pd.read_csv(general)
                 item_id_a_modificar = int(tokens[2])
                 indice_fila = df.index[df['ItemID'] == item_id_a_modificar].tolist()[0]
-                df.at[indice_fila, 'Existencias'] = df.at[indice_fila, 'Existencias'] - int(tokens[3])
-                df.to_csv(general, index=False)
+                if df.at[indice_fila, 'Existencias'] >= cantidad:
+                    df.at[indice_fila, 'Existencias'] = df.at[indice_fila, 'Existencias'] - cantidad
+                else:
+                    cantidad = df.at[indice_fila, 'Existencias']
+                    df.at[indice_fila, 'Existencias'] = df.at[indice_fila, 'Existencias'] - cantidad
+                df.to_csv(path, index=False)
+
                 total_costo = float(tokens[3]) * float(linea['Price'])
                 f = open("/home/adm-user1/proyecto/distribuidos/movimientos/movimientos.csv", "a")
-                f.write(f"{tokens[2]},{tokens[1]},{tokens[4]},{tokens[3]},{total_costo}\n")
-                print(f"{tokens[2]},{tokens[1]},{tokens[4]},{tokens[3]},{total_costo}")
+                f.write(f"{tokens[2]},{tokens[1]},{tokens[4]},{cantidad},{total_costo}\n")
+                print(f"{tokens[2]},{tokens[1]},{tokens[4]},{cantidad},{total_costo}")
             except:
                 pass
 
@@ -273,6 +282,40 @@ def sendFiles():
             copyFile(i, j)
     print("ALL FILES SENDED")
 
+def sell(ip, itemid, cantidad, cliente):
+    message = f"A7 {ip} {itemid} {cantidad} {cliente}"
+    sendAll(message)
+    path = f"/home/adm-user1/proyecto/distribuidos/productos/{ip}.csv"
+    general = f"/home/adm-user1/proyecto/distribuidos/productos/productos.csv"
+    try:
+        df = pd.read_csv(path)
+        item_id_a_modificar = int(itemid)
+        indice_fila = df.index[df['ItemID'] == item_id_a_modificar].tolist()[0]
+        linea = df[df['ItemID'] == item_id_a_modificar]
+        if df.at[indice_fila, 'Existencias'] >= int(cantidad):
+            df.at[indice_fila, 'Existencias'] = df.at[indice_fila, 'Existencias'] - int(cantidad)
+        else:
+            cantidad = df.at[indice_fila, 'Existencias']
+            df.at[indice_fila, 'Existencias'] = df.at[indice_fila, 'Existencias'] - int(cantidad)
+        df.to_csv(path, index=False)
+
+        df = pd.read_csv(general)
+        item_id_a_modificar = int(itemid)
+        indice_fila = df.index[df['ItemID'] == item_id_a_modificar].tolist()[0]
+        if df.at[indice_fila, 'Existencias'] >= int(cantidad):
+            df.at[indice_fila, 'Existencias'] = df.at[indice_fila, 'Existencias'] - int(cantidad)
+        else:
+            cantidad = df.at[indice_fila, 'Existencias']
+            df.at[indice_fila, 'Existencias'] = df.at[indice_fila, 'Existencias'] - int(cantidad)
+        df.to_csv(general, index=False)
+        total_costo = float(cantidad) * float(linea['Price'])
+        f = open("/home/adm-user1/proyecto/distribuidos/movimientos/movimientos.csv", "a")
+        f.write(f"{ip},{itemid},{cliente},{cantidad},{total_costo}\n")
+        print(f"{ip},{itemid},{cliente},{cantidad},{total_costo}")
+    except:
+        pass
+
+
 typeAction = {
     "00": {
         "function": getActives,
@@ -308,6 +351,11 @@ typeAction = {
         "function": copyFile,
         "def": "copia un archivo a otra maquina"
     },
+
+    "07": {
+        "function": sell,
+        "def": "copia un archivo a otra maquina"
+    },
 }
 
 server_t = threading.Thread(target=activeServer)
@@ -339,6 +387,12 @@ while True:
             inp = input("IP,FILE:")
             sp = inp.split(",")
             action_t = threading.Thread(target=accion, args=(sp[0], sp[1]))
+            action_t.start()
+        
+        case "07":
+            inp = input("Maquina,Producto,Cantidad,Cliente:")
+            sp = inp.split(",")
+            action_t = threading.Thread(target=accion, args=(sp[0], sp[1], sp[2], sp[3]))
             action_t.start()
 
         case _:
