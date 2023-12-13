@@ -414,7 +414,7 @@ def addProduct(ItemID,ItemBarcode,ItemName,Price,Cost,Categoria,Existencias):
 def addClient(ClienteID,Nombre,Apellido,Email,Telefono):
     global activeMachines
     global localIP
-    general = f"/home/adm-user1/proyecto/distribuidos/cleitnes/clientes.csv" 
+    general = f"/home/adm-user1/proyecto/distribuidos/clientes/clientes.csv" 
     message = f"A8 {ClienteID} {Nombre} {Apellido} {Email} {Telefono}"
     sendAll(message)
     try:
@@ -426,7 +426,7 @@ def addClient(ClienteID,Nombre,Apellido,Email,Telefono):
         print("LOAD CLIENT FAILED")
 
 def seeClients():
-    path = "/home/adm-user1/proyecto/distribuidos/cleitnes/clientes.csv"
+    path = "/home/adm-user1/proyecto/distribuidos/clientes/clientes.csv"
     df = pd.read_csv(path)
     print(df)
 
