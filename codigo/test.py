@@ -59,7 +59,7 @@ def analizedMessage(message,server):
 
         case "A3":
             if localIP > tokens[1]:
-                if len(activeMachines)==11:
+                if len(activeMachines)==1:
                     sendAll(f"A2 {localIP}")
                     defineMaster(localIP)
                     return
@@ -70,10 +70,13 @@ def analizedMessage(message,server):
                     if index == len(activeMachines) -1:
                         sendAll(f"A2 {localIP}")
                         defineMaster(localIP)
+                        activeMachines.remove(localIP)
                         return
                     else:
                         next = activeMachines(index +1)
+                        activeMachines.remove(localIP)
                         sendMessage(next, f"A3 {localIP}")
+                        return
             else:
                 sendAll(f"A2 {localIP}")
                 defineMaster(localIP)
@@ -278,12 +281,18 @@ def sendActive():
                     if(index == len(activeMachines) -1):
                         sendAll(f"A2 {localIP}")
                         masterNode = localIP
+                        activeMachines.remove(localIP)
                         return
-                    next = activeMachines[index + 1]
-                    activeMachines.remove(localIP)
+                    else:
+                        next = activeMachines[index + 1]
+                        activeMachines.remove(localIP)
+                        sendMessage(next, f"A3 {localIP}")
                 else:
-                    next = activeMachines[0]
-                sendMessage(next, f"A3 {localIP}")
+                    if localIP > activeMachines[0]:
+                        masterNode = localIP
+                    else:
+                        masterNode = activeMachines[0]
+                    sendAll(f"A2 {masterNode}")
     else:
         pass
 
