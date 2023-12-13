@@ -52,7 +52,7 @@ def analizedMessage(message,server):
             print(masterNode)
             print(activeMachines)
             masterNode = tokens[1]
-            if tokens[1] not in activeMachines:
+            if tokens[1] not in activeMachines and tokens[1] != localIP:
                 activeMachines.append(masterNode)
             print(masterNode)
             print(activeMachines)
@@ -249,7 +249,7 @@ def sendAll(*message):
                 if i == masterNode:
                     masterNode = ""
                 activeMachines.remove(i)
-                sendAll(["A1",i])
+                sendAll(f"A1 {i}")
                 print(f"{i} REMOVED ACTIVE DIRECTORY")
     else:
         for i in inicial:
@@ -258,7 +258,7 @@ def sendAll(*message):
                 if i == masterNode:
                     masterNode = ""
                 activeMachines.remove(i)
-                sendAll([f"A1 {i}"])
+                sendAll(f"A1 {i}")
                 print(f"{i} REMOVED ACTIVE DIRECTORY")          
 
 def sendActive():
