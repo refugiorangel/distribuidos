@@ -206,7 +206,6 @@ def getActives():
     global port
     global activeMachines
     
-    activeMachines = []
     print(f"GETTING ALL ACTIVE MACHINES")
     for i in allMachines:
         if i == localIP:
@@ -216,7 +215,8 @@ def getActives():
                 cliente = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 cliente.connect((ipBase + i, port))
                 cliente.close()
-                activeMachines.append(i)
+                if i not in activeMachines:
+                    activeMachines.append(i)
                 print(f"{i} ADDED TO ACTIVE MACHINES DIRECTORY")
             except:
                 print(f"{i} FAILED CONNECTION")
@@ -260,11 +260,18 @@ def sendActive():
                 activeMachines.remove(masterNode)
                 sendAll(f"A1 {masterNode}")
                 masterNode = ""
-                activeMachines.sort()
-                if((len(activeMachines) -1) == activeMachines.index(localIP)):
-                    next = activeMachines[0]
+                if(len(activeMachines > 1)):
+                    activeMachines.append(localIP)
+                    activeMachines.sort()
+                    index = activeMachines.index(localIP)
+                    if(index == len(activeMachines) -1):
+                        sendAll(f"A2 {localIP}")
+                        masterNode = localIP
+                        return
+                    next = activeMachines[index + 1]
+                    activeMachines.remove(localIP)
                 else:
-                    next = activeMachines[activeMachines.index(localIP) + 1]
+                    next = activeMachines[0]
                 sendMessage(next, f"A3 {localIP}")
     else:
         pass
@@ -291,7 +298,7 @@ def initialDistribution():
         df.to_csv(f"/home/adm-user1/proyecto/distribuidos/productos/{localIP}.csv", index=False)
     defineMaster(localIP)
     sendFiles()
-    sendAll(["A2", localIP])
+    sendAll(f"A2 {localIP}")
     print("ALL FILES SENDING")
     
 
