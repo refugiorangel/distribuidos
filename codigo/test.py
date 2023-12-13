@@ -7,7 +7,9 @@ import pandas as pd
 import random
 import paramiko
 import os
+import warnings
 
+warnings.simplefilter(action='ignore', category=FutureWarning)
 activeMachines = []
 allMachines = ["30","31","32","33","34","35","36"]
 port = 1234
@@ -283,7 +285,7 @@ def sendFiles():
     print("ALL FILES SENDED")
 
 def sell(ip, itemid, cantidad, cliente):
-    message = f"A7 {ip} {itemid} {cantidad} {cliente}"
+    message = f"A6 {ip} {itemid} {cantidad} {cliente}"
     sendAll(message)
     path = f"/home/adm-user1/proyecto/distribuidos/productos/{ip}.csv"
     general = f"/home/adm-user1/proyecto/distribuidos/productos/productos.csv"
